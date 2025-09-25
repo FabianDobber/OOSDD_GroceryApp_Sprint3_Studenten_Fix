@@ -1,20 +1,25 @@
-﻿
-using Grocery.Core.Models;
+﻿using Grocery.Core.Models;
 
 namespace Grocery.Core.Interfaces.Services
 {
     public interface IGroceryListItemsService
     {
-        public List<GroceryListItem> GetAll();
+        List<GroceryListItem> GetAll();
 
-        public List<GroceryListItem> GetAllOnGroceryListId(int groceryListId);
+        List<GroceryListItem> GetAllOnGroceryListId(int groceryListId);
 
-        public GroceryListItem Add(GroceryListItem item);
+        GroceryListItem Add(GroceryListItem item);
 
-        public GroceryListItem? Delete(GroceryListItem item);
+        GroceryListItem? Delete(GroceryListItem item);
 
-        public GroceryListItem? Get(int id);
+        GroceryListItem? Get(int id);
 
-        public GroceryListItem? Update(GroceryListItem item);
+        GroceryListItem? Update(GroceryListItem item);
+
+        GroceryListItem? AddProductToList(int groceryListId, Product product);
+
+        bool IncreaseItemQuantity(GroceryListItem item);
+
+        bool DecreaseItemQuantity(GroceryListItem item);
     }
 }
