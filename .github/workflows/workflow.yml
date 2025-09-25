@@ -37,7 +37,7 @@ jobs:
         run: dotnet test --configuration Release --no-restore --no-build --logger "trx;LogFileName=TestResults.trx"
 
       - name: Upload test resultaten als artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TestResults
           path: '**/TestResults.trx'
