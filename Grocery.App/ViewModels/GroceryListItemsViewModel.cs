@@ -23,7 +23,9 @@ namespace Grocery.App.ViewModels
         GroceryList groceryList = new(0, "None", DateOnly.MinValue, "", 0);
         [ObservableProperty]
         string myMessage;
-
+        [ObservableProperty]
+        string searchText = string.Empty;
+        
         public GroceryListItemsViewModel(IGroceryListItemsService groceryListItemsService, IProductService productService, IFileSaverService fileSaverService)
         {
             _groceryListItemsService = groceryListItemsService;
@@ -43,7 +45,18 @@ namespace Grocery.App.ViewModels
         {
             AvailableProducts.Clear();
             foreach (Product p in _productService.GetAll())
-                if (MyGroceryListItems.FirstOrDefault(g => g.ProductId == p.Id) == null  && p.Stock > 0)
+                if (MyGroceryListItems.FirstOrDefault(g => g.ProductId == p.Id) == null  
+                    && p.Stock > 0)
+                    AvailableProducts.Add(p);
+        }
+
+        private void GetAvailableProducts(string query)
+        {
+            AvailableProducts.Clear();
+            foreach (Product p in _productService.GetAll())
+                if (MyGroceryListItems.FirstOrDefault(g => g.ProductId == p.Id) == null
+                    && p.Stock > 0
+                    && (string.IsNullOrEmpty(query) || p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)))
                     AvailableProducts.Add(p);
         }
 
@@ -51,6 +64,22 @@ namespace Grocery.App.ViewModels
         {
             Load(value.Id);
         }
+
+        [RelayCommand]
+        private void SearchProducts(string query)
+        {
+            GetAvailableProducts(query);
+        }
+
+        partial void OnSearchTextChanged(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                GetAvailableProducts();
+            }
+        }
+
+
 
         [RelayCommand]
         public async Task ChangeColor()
@@ -66,10 +95,62 @@ namespace Grocery.App.ViewModels
             _groceryListItemsService.Add(item);
             product.Stock--;
             _productService.Update(product);
+
+            MyGroceryListItems.Add(item);
             AvailableProducts.Remove(product);
-            OnGroceryListChanged(GroceryList);
         }
 
+        [RelayCommand]
+        public void IncreaseQuantity(GroceryListItem item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+            var product = _productService.GetAll().FirstOrDefault(p => p.Id == item.ProductId);
+            if (product != null && product.Stock > 0)
+            {
+                item.Amount++;
+                product.Stock--;
+
+                _groceryListItemsService.Update(item);
+                _productService.Update(product);
+
+                OnPropertyChanged(nameof(GroceryList));
+            }
+            else
+            {
+                Toast.Make("Product niet meer op voorraad");
+            }
+        }
+        [RelayCommand]
+        public void DecreaseQuantity(GroceryListItem item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+            item.Amount--;
+            var product = _productService.GetAll().FirstOrDefault(p => p.Id == item.ProductId);
+            if (product != null)
+
+            {
+                product.Stock++;
+                _productService.Update(product);
+            }
+            if (item.Amount <= 0)
+            {
+                _groceryListItemsService.Delete(item);
+                MyGroceryListItems.Remove(item);
+                
+                GetAvailableProducts(SearchText);
+            }
+            else
+            {
+                _groceryListItemsService.Update(item);
+                OnPropertyChanged(nameof(MyGroceryListItems));
+            }
+        }
         [RelayCommand]
         public async Task ShareGroceryList(CancellationToken cancellationToken)
         {

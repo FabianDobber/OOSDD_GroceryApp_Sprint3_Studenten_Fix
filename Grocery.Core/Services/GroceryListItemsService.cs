@@ -31,12 +31,14 @@ namespace Grocery.Core.Services
 
         public GroceryListItem Add(GroceryListItem item)
         {
-            return _groceriesRepository.Add(item);
+            var addedItem = _groceriesRepository.Add(item);
+            addedItem.Product = _productRepository.Get(addedItem.ProductId) ?? new(0, "None", 0);
+            return addedItem;
         }
 
         public GroceryListItem? Delete(GroceryListItem item)
         {
-            throw new NotImplementedException();
+            return _groceriesRepository.Delete(item);
         }
 
         public GroceryListItem? Get(int id)
@@ -46,7 +48,7 @@ namespace Grocery.Core.Services
 
         public GroceryListItem? Update(GroceryListItem item)
         {
-            throw new NotImplementedException();
+            return _groceriesRepository.Update(item);      
         }
 
         private void FillService(List<GroceryListItem> groceryListItems)
